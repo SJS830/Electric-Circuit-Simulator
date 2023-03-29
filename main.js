@@ -21,7 +21,7 @@ function makeSystem() {
   });
   uniqueNodes = [...new Set(uniqueNodes)];
 
-  let uniqueVariables = [...uniqueNodes, ...RESISTORS.map(resistor => resistor.name)];
+  let uniqueVariables = [...uniqueNodes, "Rbattery", ...RESISTORS.map(resistor => resistor.name)];
 
   let systemMatrix = [];
   let solutions = [];
@@ -41,16 +41,20 @@ function makeSystem() {
   addConstraint({[BATTERY.node_in]: 1}, BATTERY.voltage);
 
   uniqueNodes.forEach(node => {
-    let goingIn = RESISTORS.filter(x => x.node_out == node);
-    let goingOut = RESISTORS.filter(x => x.node_in == node);
+    let goingIn = RESISTORS.filter(x => x.node_out == node).map(x => x.name);
+    let goingOut = RESISTORS.filter(x => x.node_in == node).map(x => x.name);
+
+    if (node == BATTERY.node_out) {
+      goingIn.push("Rbattery");
+    }
 
     if (goingIn.length > 0 && goingOut.length > 0) {
       let coefficients = {};
 
-      goingIn.map(x => x.name).forEach(r => {
+      goingIn.forEach(r => {
         coefficients[r] = 1;
       });
-      goingOut.map(x => x.name).forEach(r => {
+      goingOut.forEach(r => {
         coefficients[r] = -1;
       });
 
@@ -76,6 +80,15 @@ function solveSystem({ systemMatrix, solutions, names }) {
   return out;
 }
 
+function printInfo(solution) {
+  console.log(`Total voltage through the battery: ${BATTERY.voltage}V`);
+  console.log(`Total current through the battery: ${solution["Rbattery"]}A`);
+
+  RESISTORS.forEach(resistor => {
+    console.log(`Current through ${resistor.name}: ${solution[resistor.name]}A`);
+  });
+}
+
 let system = makeSystem();
 let solution = solveSystem(system);
-console.log(solution);
+printInfo(solution);

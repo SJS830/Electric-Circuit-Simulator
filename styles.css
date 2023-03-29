@@ -1,0 +1,14 @@
+.junction {
+  height: 50px;
+  width: 50px;
+  color: black;
+
+  border-radius: 50%;
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  font-size: 50px;
+  background-color: grey;
+}
