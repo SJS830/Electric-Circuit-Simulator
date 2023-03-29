@@ -1,5 +1,4 @@
-const nerdamer = require("nerdamer/all.min");
-nerdamer.set("SOLUTIONS_AS_OBJECT", true)
+const { lusolve } = require("mathjs");
 
 const BATTERY = {
   node_out: "N1",
@@ -7,50 +6,76 @@ const BATTERY = {
   voltage: 24
 }
 
-const NODES = ["N1", "N2", "N3", "N4"];
-
-function makeResistor(name, node_in, node_out, resistance) {
-  return {
-    name,
-    node_in,
-    node_out,
-    resistance
-  };
-}
-
 const RESISTORS = [
-  makeResistor("R5", "N1", "N4", 6),
-  makeResistor("R3", "N1", "N2", 1),
-  makeResistor("R1", "N2", "N3", 2),
-  makeResistor("R2", "N3", "N4", 10),
-  makeResistor("R4", "N2", "N4", 4),
+  {name: "R5", node_in: "N1", node_out: "N4", resistance: 6},
+  {name: "R3", node_in: "N1", node_out: "N2", resistance: 1},
+  {name: "R1", node_in: "N2", node_out: "N3", resistance: 2},
+  {name: "R2", node_in: "N3", node_out: "N4", resistance: 10},
+  {name: "R4", node_in: "N2", node_out: "N4", resistance: 4},
 ];
 
-//make the linear system of equations representing the circuit
 function makeSystem() {
-  let system = [];
+  let uniqueNodes = [];
+  RESISTORS.forEach(resistor => {
+    uniqueNodes.push(resistor.node_in, resistor.node_out);
+  });
+  uniqueNodes = [...new Set(uniqueNodes)];
 
-  system.push(`${BATTERY.node_out} = 0`);
-  system.push(`${BATTERY.node_in} = ${BATTERY.voltage}`);
+  let uniqueVariables = [...uniqueNodes, ...RESISTORS.map(resistor => resistor.name)];
 
-  NODES.forEach(node => {
+  let systemMatrix = [];
+  let solutions = [];
+
+  function addConstraint(coefficients, solution) {
+    let row = new Array(uniqueVariables.length).fill(0);
+
+    Object.entries(coefficients).forEach(([name, coeff]) => {
+        row[uniqueVariables.indexOf(name)] = coeff;
+    });
+
+    systemMatrix.push(row);
+    solutions.push(solution);
+  }
+
+  addConstraint({[BATTERY.node_out]: 1}, 0);
+  addConstraint({[BATTERY.node_in]: 1}, BATTERY.voltage);
+
+  uniqueNodes.forEach(node => {
     let goingIn = RESISTORS.filter(x => x.node_out == node);
     let goingOut = RESISTORS.filter(x => x.node_in == node);
 
     if (goingIn.length > 0 && goingOut.length > 0) {
-      let eq = `${goingIn.map(x => x.name).join(" + ")} = ${goingOut.map(x => x.name).join(" + ")}`;
-      system.push(eq);
+      let coefficients = {};
+
+      goingIn.map(x => x.name).forEach(r => {
+        coefficients[r] = 1;
+      });
+      goingOut.map(x => x.name).forEach(r => {
+        coefficients[r] = -1;
+      });
+
+      addConstraint(coefficients, 0);
     }
   });
 
   RESISTORS.forEach(resistor => {
-    let eq = `${resistor.node_in} + ${resistor.name} * ${resistor.resistance} = ${resistor.node_out}`;
-    system.push(eq);
+    addConstraint({[resistor.node_in]: 1, [resistor.name]: resistor.resistance, [resistor.node_out]: -1}, 0);
   });
 
-  return system
+  return { systemMatrix, solutions, names: uniqueVariables };
+}
+
+function solveSystem({ systemMatrix, solutions, names }) {
+  let solved = lusolve(systemMatrix, solutions);
+  let out = {};
+
+  for (let i = 0; i < names.length; i++) {
+    out[names[i]] = solved[i][0];
+  }
+
+  return out;
 }
 
 let system = makeSystem();
-console.log(system);
-console.log(nerdamer.solveEquations(system));
+let solution = solveSystem(system);
+console.log(solution);
