@@ -37,8 +37,10 @@ function makeSystem() {
     solutions.push(solution);
   }
 
+  //addConstraint({[BATTERY.node_out]: 1}, 0);
+  //addConstraint({[BATTERY.node_in]: 1}, BATTERY.voltage);
+  addConstraint({[BATTERY.node_in]: 1, [BATTERY.node_out]: -1}, BATTERY.voltage);
   addConstraint({[BATTERY.node_out]: 1}, 0);
-  addConstraint({[BATTERY.node_in]: 1}, BATTERY.voltage);
 
   uniqueNodes.forEach(node => {
     let goingIn = RESISTORS.filter(x => x.node_out == node).map(x => x.name);
@@ -91,4 +93,5 @@ function printInfo(solution) {
 
 let system = makeSystem();
 let solution = solveSystem(system);
-printInfo(solution);
+//printInfo(solution);
+console.log(solution);
