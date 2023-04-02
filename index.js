@@ -29,6 +29,61 @@ function redraw() {
 
 redraw();
 
+function getTouchingWires(wire) {
+  return WIRES.filter(neighbor => {
+    if (wire[2] == "v" && neighbor[2] == "v") {
+      return Math.abs(wire[1] - neighbor[1]) == 1 && wire[0] == neighbor[0];
+    } else if (wire[2] == "h" && neighbor[2] == "h") {
+      return Math.abs(wire[0] - neighbor[0]) == 1 && wire[1] == neighbor[1];
+    } else {
+      let v, h;
+      if (wire[2] == "v") {
+        v = wire;
+        h = neighbor;
+      } else {
+        v = neighbor;
+        h = wire;
+      }
+
+      return ((v[0] == h[0] && v[1] == h[1]) || (v[0] == 1 + h[0] && v[1] == h[1]) || (v[0] == h[0] && v[1] + 1 == h[1]) || (v[0] == 1 + h[0] && v[1] + 1 == h[1]));
+    }
+  });
+}
+
+function getNodes() {
+  let wiresAlreadyAssigned = [];
+  let nodes = [];
+
+  function wireAlreadyAssigned(wire) {
+    return wiresAlreadyAssigned.some(test => JSON.stringify(test) == JSON.stringify(wire));
+  }
+
+  function recurs(wire) {
+    if (wireAlreadyAssigned(wire)) {
+      return;
+    }
+
+    let node = nodes[nodes.length - 1];
+    wiresAlreadyAssigned.push(wire);
+    node.push[wire];
+
+    getTouchingWires().forEach(touching => {
+      recurs(touching);
+    });
+  }
+
+  WIRES.forEach(wire => {
+    if (wireAlreadyAssigned(wire)) {
+      return;
+    }
+
+    nodes.push([]);
+    recurs(wire);
+  });
+
+  return nodes;
+}
+
 function getGhostWire() {
   let wx = mouseX / 100;
   let wy = mouseY / 100;
@@ -66,7 +121,8 @@ function getGhostWire() {
 
 function drawGhostWire() {
   redraw();
-  drawWire(getGhostWire());
+  let ghost = getGhostWire();
+  drawWire(ghost);
 }
 
 let mouseX, mouseY;
@@ -75,6 +131,7 @@ window.addEventListener("mousemove", ({pageX, pageY}) => {
   mouseY = pageY;
 
   drawGhostWire();
+  console.log(getNodes());
 });
 
 window.addEventListener("click", () => {
