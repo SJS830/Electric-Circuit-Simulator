@@ -1,3 +1,4 @@
+const WIRE_SEGMENT_LENGTH = 100;
 let WIRES = [[5, 5, "h"], [5, 5, "v"]];
 
 const canvas = document.createElement("canvas");
@@ -8,14 +9,16 @@ document.body.appendChild(canvas);
 
 const ctx = canvas.getContext("2d");
 
-function drawWire([x, y, direction]) {
+function drawWire([x, y, direction], color="black") {
   ctx.beginPath();
-  ctx.moveTo(x * 100, y *100);
+  ctx.strokeStyle = color;
+
+  ctx.moveTo(x * WIRE_SEGMENT_LENGTH, y *WIRE_SEGMENT_LENGTH);
 
   if (direction == "h") {
-    ctx.lineTo((x + 1) * 100, y * 100);
+    ctx.lineTo((x + 1) * WIRE_SEGMENT_LENGTH, y * WIRE_SEGMENT_LENGTH);
   } else if (direction == "v") {
-    ctx.lineTo(x * 100, (y + 1) * 100);
+    ctx.lineTo(x * WIRE_SEGMENT_LENGTH, (y + 1) * WIRE_SEGMENT_LENGTH);
   }
 
   ctx.stroke();
@@ -24,7 +27,13 @@ function drawWire([x, y, direction]) {
 function redraw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  WIRES.forEach(drawWire);
+  let colors = ["red", "green", "blue", "pink", "orange", "purple"];
+
+  getNodes().forEach((node, i) => {
+    node.forEach(wire => {
+      drawWire(wire, colors[i]);
+    });
+  });
 }
 
 redraw();
@@ -65,9 +74,9 @@ function getNodes() {
 
     let node = nodes[nodes.length - 1];
     wiresAlreadyAssigned.push(wire);
-    node.push[wire];
+    node.push(wire);
 
-    getTouchingWires().forEach(touching => {
+    getTouchingWires(wire).forEach(touching => {
       recurs(touching);
     });
   }
@@ -85,8 +94,8 @@ function getNodes() {
 }
 
 function getGhostWire() {
-  let wx = mouseX / 100;
-  let wy = mouseY / 100;
+  let wx = mouseX / WIRE_SEGMENT_LENGTH;
+  let wy = mouseY / WIRE_SEGMENT_LENGTH;
 
   let ax = wx % 1;
   let ay = wy % 1;

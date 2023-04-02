@@ -1,35 +1,5 @@
-.junction {
-  height: 50px;
-  width: 50px;
-  color: black;
-
-  font-size: 10px;
-
-  border-radius: 50%;
+#components {
   position: absolute;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  font-size: 50px;
-
-  background-color: lightgrey;
-}
-
-.resistor {
-  height: 50px;
-  width: 50px;
-  color: black;
-
-  font-size: 10px;
-
-  border-radius: 50%;
-  position: absolute;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  font-size: 50px;
-
-  background-color: red;
+  left: 10px;
+  top: 10px;
 }
